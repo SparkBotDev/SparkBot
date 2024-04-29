@@ -1,0 +1,17 @@
+{
+  "name": "sparkbot",
+  "version": "0.1.0",
+  "description": "A lightning-fast Discord bot framework with advanced features designed to make development effortless.",
+  "author": "Brian Lister <brian@sparkforge.dev (http://sparkforge.dev/)",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "discord.js": "^14.14.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
