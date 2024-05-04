@@ -6,7 +6,14 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "discord.js": "^14.14.1"
+    "@sparkbot/logger-console": "latest",
+    "@sparkbot/logger-plugin-interface": "latest",
+    "@sparkbot/secrets-environment": "latest",
+    "@sparkbot/secrets-plugin-interface": "latest",
+    "cron": "^3.1.7",
+    "discord.js": "^14.15.1",
+    "luxon": "^3.4.4",
+    "valibot": "^0.30.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
