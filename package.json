@@ -6,12 +6,12 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "@sparkbot/logger-console": "latest",
-    "@sparkbot/logger-plugin-interface": "latest",
-    "@sparkbot/secrets-environment": "latest",
-    "@sparkbot/secrets-plugin-interface": "latest",
+    "@sparkbot/logger-console": "^0.3.0",
+    "@sparkbot/logger-plugin-interface": "^0.3.0",
+    "@sparkbot/secrets-environment": "^0.3.0",
+    "@sparkbot/secrets-plugin-interface": "^0.3.0",
     "cron": "^3.1.7",
-    "discord.js": "^14.15.1",
+    "discord.js": "^14.15.2",
     "luxon": "^3.4.4",
     "valibot": "^0.30.0"
   },

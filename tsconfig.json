@@ -23,7 +23,8 @@
 		"noUnusedParameters": true,
 		"forceConsistentCasingInFileNames": true,
 
-		// Just to stop lame errors
-		"outDir": "dist"
+		// Since this is a Bun app, there is no reason to not use ts extensions in the code
+		"allowImportingTsExtensions": true,
+		"noEmit": true
 	}
 }
