@@ -26,30 +26,6 @@ const string_ = v.transform(
 );
 
 /**
- * A string that can be different in prod/dev environments.
- */
-const number_ = v.transform(
-	v.union([
-		v.number(),
-		v.object({
-			prod: v.number(),
-			dev: v.number(),
-		}),
-	]),
-	(input) => {
-		if (typeof input === 'number') {
-			return input;
-		}
-
-		if (Bun.env.NODE_ENV === 'production') {
-			return input.prod;
-		}
-
-		return input.dev;
-	},
-);
-
-/**
  * An object containing the name and options of a plugin, can be different
  * in prod/dev environments.
  */
@@ -90,7 +66,7 @@ export const configSchema = v.object(
 		discordIntents: v.array(v.enum_(GatewayIntentBits)),
 		secretsVault: plugin_,
 		loggingLib: plugin_,
-		channelMap: v.optional(v.record(number_)),
+		channelMap: v.optional(v.record(string_)),
 	},
 	v.unknown(),
 );
