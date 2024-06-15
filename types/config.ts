@@ -1,4 +1,4 @@
-import { GatewayIntentBits } from 'discord.js';
+import { GatewayIntentBits, Partials } from 'discord.js';
 import * as v from 'valibot';
 
 /**
@@ -63,7 +63,9 @@ export const configSchema = v.object(
 	{
 		discordApiKey: string_,
 		discordAppId: string_,
-		discordIntents: v.array(v.enum_(GatewayIntentBits)),
+		intents: v.array(v.enum_(GatewayIntentBits)),
+		partials: v.array(v.enum_(Partials)),
+		dbEnabled: v.boolean(),
 		secretsVault: plugin_,
 		loggingLib: plugin_,
 		channelMap: v.optional(v.record(string_)),

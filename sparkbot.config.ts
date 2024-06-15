@@ -5,7 +5,9 @@ import { type Configuration, SECRET } from './types/config.ts';
 export const config: Configuration = {
 	discordApiKey: SECRET,
 	discordAppId: SECRET,
-	discordIntents: [GatewayIntentBits.Guilds],
+	intents: [GatewayIntentBits.Guilds],
+	partials: [],
+	dbEnabled: false,
 	secretsVault: {
 		name: '@sparkbot/secrets-environment',
 	},
