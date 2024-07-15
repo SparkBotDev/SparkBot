@@ -1,21 +1,20 @@
-import type { LoggerPlugin } from '@sparkbot/logger-plugin-interface';
-import type { Collection } from 'discord.js';
+import type { Logger } from '@sparkbot/plugin-logger';
+import type {
+	Collection,
+	ContextMenuCommandBuilder,
+	SlashCommandBuilder,
+} from 'discord.js';
 import type { CronJob } from 'cron';
-import type { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite';
-import type * as dbSchema from '../db/schema.ts';
-import type { SparkBotConfig } from './config.ts';
-import type { SparkBotInteraction } from './components.ts';
+import type { SparkBotConfig } from '../lib/config';
+import type { InteractionSpark } from '../lib/sparks';
 
 declare module 'discord.js' {
 	interface Client {
 		config: SparkBotConfig;
-		logger: LoggerPlugin;
-		interactions: Collection<string, SparkBotInteraction>;
+		logger: Logger;
+		sparks: Collection<string, InteractionSpark>;
 		cooldowns: Collection<string, number>;
+		commands: Array<SlashCommandBuilder | ContextMenuCommandBuilder>;
 		scheduledEvents: Collection<string, CronJob>;
-		db: {
-			orm: BunSQLiteDatabase<typeof dbSchema>;
-			schemas: typeof dbSchema;
-		};
 	}
 }

@@ -3,11 +3,16 @@
 		// Configure modes
 		"lib": ["ESNext"],
 		"target": "ESNext",
-		"module": "NodeNext",
+		"module": "ESNext",
 		"moduleDetection": "force",
-		"moduleResolution": "NodeNext",
+		"moduleResolution": "bundler",
 		"esModuleInterop": true,
 		"allowJs": true,
+		"verbatimModuleSyntax": true,
+
+		// Since this is a Bun app, there is no reason to not use ts extensions in the code
+		"allowImportingTsExtensions": true,
+		"noEmit": true,
 
 		// Strict code checking
 		"strict": true,
@@ -21,10 +26,6 @@
 		"noUncheckedIndexedAccess": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
-		"forceConsistentCasingInFileNames": true,
-
-		// Since this is a Bun app, there is no reason to not use ts extensions in the code
-		"allowImportingTsExtensions": true,
-		"noEmit": true
+		"forceConsistentCasingInFileNames": true
 	}
 }

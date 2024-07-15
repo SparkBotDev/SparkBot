@@ -1,69 +1,56 @@
-import { join } from 'node:path';
-import { Database } from 'bun:sqlite';
-import { Client, Collection } from 'discord.js';
-import { drizzle } from 'drizzle-orm/bun-sqlite';
-import { migrate } from 'drizzle-orm/bun-sqlite/migrator';
-import { config } from './lib/configurator.ts';
-import { isLoggerPlugin, isSparkBotLoader } from './types/guards.ts';
-import { sparkLoad } from './lib/spark-load.ts';
-import * as dbSchema from './db/schema.ts';
+import { Client, Collection, Events, REST, Routes } from 'discord.js';
+import { loadConfig } from './lib/config';
+import { initLogger } from './lib/logger';
+import { sparkContainer, sparkLoader } from './lib/sparks';
 
-/*
- * Initialize client
- */
+// Get the config
+const config = await loadConfig();
+
+// Initialize a new Discord.js client
 const client = new Client({
-	intents: config.intents,
-	partials: config.partials,
+	intents: config.discordIntents,
+	partials: config.enabledPartials,
+	presence: config.defaultPresence,
 });
+sparkContainer.client = client;
 client.config = config;
-
-client.interactions = new Collection();
+client.sparks = new Collection();
 client.cooldowns = new Collection();
+client.commands = [];
 client.scheduledEvents = new Collection();
 
-/*
- * Get logger plugin and initialize
- */
-await import(config.loggingLib.name)
-	.then((contents: Record<string, unknown>) => {
-		const Logger = contents['Logger']; // eslint-disable-line @typescript-eslint/naming-convention
-		if (isLoggerPlugin(Logger)) {
-			client.logger = new Logger(client, config.loggingLib.options);
-		} else {
-			throw new Error('Invalid SecretsPlugin');
-		}
-	})
-	.catch((exception) => {
-		if (exception instanceof Error) {
-			throw exception;
-		}
+// Initialize logger
+client.logger = await initLogger(client.config.loggingLibraryPlugin);
+client.on(Events.Debug, (message) => {
+	client.logger.debug(message);
+});
+client.on(Events.Warn, (message) => {
+	client.logger.warn(message);
+});
+client.on(Events.Error, (message) => {
+	client.logger.error(message);
+});
 
-		throw new Error(String(exception));
+// Load Sparks
+await sparkLoader();
+
+// Register commands
+const rest = new REST({ version: '10' }).setToken(config.discordAPIKey);
+await rest
+	.put(Routes.applicationCommands(config.discordAppID), {
+		body: client.commands.map((command) => command.toJSON()),
+	})
+	.then((data) => {
+		if (data && typeof data === 'object' && 'length' in data)
+			client.logger.info(`🔵 Registered ${String(data.length)} command(s)`);
+	})
+	.catch((exception: unknown) => {
+		if (exception instanceof Error) {
+			client.logger.error(exception);
+		} else {
+			client.logger.error(String(exception));
+		}
 	});
 
-/*
- * Initialize database
- */
-if (config.dbEnabled) {
-	const database = new Database('./db/database.db');
-	client.db = {
-		orm: drizzle(database, { schema: dbSchema }),
-		schemas: dbSchema,
-	};
-	migrate(client.db.orm, { migrationsFolder: './db/drizzle' });
-}
-
-/*
- * Process loaders
- */
-const loaders = await sparkLoad(join(import.meta.dir, './loaders'));
-for (const loader of loaders) {
-	if (isSparkBotLoader(loader)) {
-		loader.load(client);
-	}
-}
-
-/*
- * Login to Discord servers
- */
-await client.login(config.discordApiKey);
+// Login
+await client.login(config.discordAPIKey);

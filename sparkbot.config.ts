@@ -1,24 +1,28 @@
 import { GatewayIntentBits } from 'discord.js';
-import { LoggerLevel } from '@sparkbot/logger-plugin-interface';
-import { type Configuration, SECRET } from './types/config.ts';
+import { LoggingLevel } from '@sparkbot/plugin-logger';
+import type { SecretsVaultSchema, SparkBotSchema } from './lib/config';
 
-export const config: Configuration = {
-	discordApiKey: SECRET,
-	discordAppId: SECRET,
-	intents: [GatewayIntentBits.Guilds],
-	partials: [],
-	dbEnabled: false,
-	secretsVault: {
-		name: '@sparkbot/secrets-environment',
+export const secretsVaultPluginConfig: SecretsVaultSchema = {
+	module: '@sparkbot/plugin-secrets',
+};
+
+export const sparkBotConfig: SparkBotSchema = {
+	discordAPIKey: { secretVaultKey: 'discordAPIKey' },
+	discordAppID: { secretVaultKey: 'discordAppID' },
+	discordIntents: [GatewayIntentBits.Guilds],
+	enabledPartials: [],
+	defaultPresence: {
+		status: 'online',
+		activities: [],
 	},
-	loggingLib: {
+	loggingLibraryPlugin: {
 		prod: {
-			name: '@sparkbot/logger-console',
-			options: { loggingLevel: LoggerLevel.info },
+			module: '@sparkbot/plugin-logger',
+			options: { loggingLevel: LoggingLevel.warn },
 		},
 		dev: {
-			name: '@sparkbot/logger-console',
-			options: { loggingLevel: LoggerLevel.debug },
+			module: '@sparkbot/plugin-logger',
+			options: { loggingLevel: LoggingLevel.debug },
 		},
 	},
 };
