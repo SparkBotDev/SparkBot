@@ -85,8 +85,35 @@ export const valueByEnv = v.pipeAsync(
  */
 export const plugin = v.objectAsync({
 	module: value,
-	options: v.optional(v.record(v.string(), v.unknown())),
+	options: v.optionalAsync(
+		v.recordAsync(
+			v.string(),
+			v.pipeAsync(
+				v.unknown(),
+				v.transformAsync(async (input) => {
+					await recurseValidate(input as Record<string, unknown>);
+					return input;
+				}),
+			),
+		),
+	),
 });
+
+async function recurseValidate(data: Record<string, unknown>) {
+	const checked = await v.safeParseAsync(value, data);
+	if (checked.success) {
+		return checked.output;
+	}
+
+	if (data && typeof data === 'object') {
+		const keys = Object.keys(data);
+		for (const key of keys) {
+			data[key] = await recurseValidate(data[key] as Record<string, unknown>); // eslint-disable-line no-await-in-loop
+		}
+	}
+
+	return data;
+}
 
 /**
  * A schema that defines a set of plugin configurations by environment

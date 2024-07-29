@@ -9,7 +9,11 @@ export async function sparkLoader() {
 
 	const importedFiles: unknown[] = [];
 	for (const file of fileList) {
-		if (typeof file === 'string' && extname(file) === '.ts')
+		if (
+			typeof file === 'string' &&
+			extname(file) === '.ts' &&
+			!file.includes('lib/')
+		)
 			importedFiles.push(import(join(importPath, file)) as unknown);
 	}
 

@@ -1,6 +1,8 @@
 import { Events, type Interaction } from 'discord.js';
-import { GatewayEventSpark } from '../../lib/sparks';
-import { isCommandSparkWithAutoComplete } from '../../types/guards';
+import {
+	CommandSparkWithAutocomplete,
+	GatewayEventSpark,
+} from '../../lib/sparks';
 
 /**
  * The Interaction Create event is emitted any time a user interacts with
@@ -43,7 +45,7 @@ export class Event extends GatewayEventSpark<Events.InteractionCreate> {
 			}
 		} else if (
 			interaction.isAutocomplete() &&
-			isCommandSparkWithAutoComplete(spark)
+			spark instanceof CommandSparkWithAutocomplete
 		) {
 			try {
 				spark.autocomplete(interaction);
