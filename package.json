@@ -1,19 +1,20 @@
 {
-  "name": "sparkbot",
-  "version": "0.2.0",
+  "name": "@sparkbot/core",
+  "version": "0.4.0",
   "description": "A lightning-fast Discord bot framework with advanced features designed to make development effortless.",
   "author": "Brian Lister <brian@sparkforge.dev (http://sparkforge.dev/)",
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "@sparkbot/plugin-logger": "^0.1.0",
+    "@hypercliq/shutdown-cleanup": "^6.0.4",
+    "@sparkbot/plugin-logger": "^0.4.0",
     "@sparkbot/plugin-secrets": "^0.1.0",
     "cron": "^3.1.7",
-    "discord.js": "^14.15.2",
-    "luxon": "^3.4.4",
-    "valibot": "^0.33.0"
+    "discord.js": "^14.16.2",
+    "luxon": "^3.5.0",
+    "valibot": "^0.42.0"
   },
   "peerDependencies": {
-    "typescript": "^5.5.4"
+    "typescript": "^5.6.2"
   }
 }

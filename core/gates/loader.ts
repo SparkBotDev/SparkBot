@@ -1,10 +1,15 @@
 import { readdirSync } from 'node:fs';
 import { extname, join } from 'node:path';
-import { doesClassExtend, isClass } from '../../types/guards';
-import { Spark } from './spark.ts';
+import { Collection } from 'discord.js';
+import * as v from 'valibot';
+import type { Gate } from './gate.ts';
 
-export async function sparkLoader() {
-	const importPath = join(import.meta.dir, '../../sparks/');
+const GateSchema = v.object({
+	id: v.string(),
+	check: v.function(),
+});
+export async function gateLoader() {
+	const importPath = join(import.meta.dir, '../../gates/');
 	const fileList = readdirSync(importPath, { recursive: true });
 
 	const importedFiles: unknown[] = [];
@@ -17,18 +22,14 @@ export async function sparkLoader() {
 			importedFiles.push(import(join(importPath, file)) as unknown);
 	}
 
+	const gates = new Collection<string, Gate>();
 	await Promise.all(importedFiles)
 		.then((value) => {
 			for (const module of value) {
 				if (module && typeof module === 'object') {
 					for (const item of Object.values(module)) {
-						if (isClass(item) && doesClassExtend(item, Spark)) {
-							const instance = new item(); // eslint-disable-line new-cap
-							// eslint-disable-next-line max-depth
-							if (instance instanceof Spark) {
-								instance.onLoad();
-							}
-						}
+						const validated = v.parse(GateSchema, item);
+						gates.set(validated.id, validated as Gate);
 					}
 				}
 			}
@@ -37,4 +38,6 @@ export async function sparkLoader() {
 			if (exception instanceof Error) throw exception;
 			throw new Error(String(exception));
 		});
+
+	return gates;
 }

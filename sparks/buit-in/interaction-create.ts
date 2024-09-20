@@ -2,7 +2,7 @@ import { Events, type Interaction } from 'discord.js';
 import {
 	CommandSparkWithAutocomplete,
 	GatewayEventSpark,
-} from '../../lib/sparks';
+} from '../../core/sparks';
 
 /**
  * The Interaction Create event is emitted any time a user interacts with
@@ -11,14 +11,17 @@ import {
  * This handler routes interactions to the correct Spark for processing.
  * @see https://discord.com/developers/docs/topics/gateway-events#interaction-create
  */
-export class Event extends GatewayEventSpark<Events.InteractionCreate> {
-	override eventType = Events.InteractionCreate as const;
-	override execute(interaction: Interaction) {
+export class GatewayEvent extends GatewayEventSpark<Events.InteractionCreate> {
+	once = false;
+	eventType = Events.InteractionCreate as const;
+	gates = {};
+
+	override execute(interaction: Interaction): void {
 		let id = '';
 		if (interaction.isCommand() || interaction.isAutocomplete())
 			id = interaction.commandName;
 		if (interaction.isMessageComponent()) id = interaction.customId;
-		const spark = interaction.client.sparks.get(id);
+		const spark = interaction.client.interactions.get(id);
 
 		if (!spark) {
 			interaction.client.logger.warn(
@@ -35,14 +38,7 @@ export class Event extends GatewayEventSpark<Events.InteractionCreate> {
 		}
 
 		if (interaction.isCommand() || interaction.isMessageComponent()) {
-			if (spark?.isOnCooldown(interaction)) {
-				void interaction.reply({
-					content: 'Command is on cooldown, please try again later.',
-					ephemeral: true,
-				});
-			} else {
-				spark.execute(interaction);
-			}
+			spark.gateCheck(interaction);
 		} else if (
 			interaction.isAutocomplete() &&
 			spark instanceof CommandSparkWithAutocomplete

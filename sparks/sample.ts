@@ -4,12 +4,13 @@ import {
 	SlashCommandBuilder,
 	type ChatInputCommandInteraction,
 } from 'discord.js';
-import { CommandSpark, ScheduledEventSpark } from '../lib/sparks';
+import { CommandSpark, ScheduledEventSpark } from '../core/sparks';
 
 /*
-	It is best to create the command, and then set its options to provide
-	correct typings
-*/
+ * Chaining the command as per the Discord.js documentation will create type
+ * issues in some cases. Therefore it is best to create the builder and then
+ * set the properties.
+ */
 const pingCommand = new SlashCommandBuilder();
 pingCommand
 	.setName('ping')
@@ -18,8 +19,8 @@ pingCommand
 
 export class Ping extends CommandSpark {
 	id = pingCommand.name;
-	override command = pingCommand;
-	protected override cooldownSecs = 10;
+	command = pingCommand;
+	gates = { test: false };
 
 	async execute(interaction: ChatInputCommandInteraction) {
 		await interaction.reply({
@@ -30,8 +31,11 @@ export class Ping extends CommandSpark {
 
 export class ScheduledEvent extends ScheduledEventSpark {
 	id = 'sample-event';
-	protected override schedule = ['*/5 * * * *'];
-	override execute(client: Client): void {
+	schedule = ['*/5 * * * *'];
+	timezone = 'system'; // See https://github.com/moment/luxon/blob/master/docs/zones.md#specifying-a-zone
+	gates = {};
+
+	execute(client: Client): void {
 		client.logger.debug('Scheduled event tick every 5 minutes');
 	}
 }

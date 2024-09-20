@@ -1,56 +1,116 @@
-import { Client, Collection, Events, REST, Routes } from 'discord.js';
-import { loadConfig } from './lib/config';
-import { initLogger } from './lib/logger';
-import { sparkContainer, sparkLoader } from './lib/sparks';
+import type { CronJob } from 'cron';
+import {
+	Client,
+	Collection,
+	type ContextMenuCommandBuilder,
+	REST,
+	Routes,
+	type SlashCommandBuilder,
+} from 'discord.js';
+import { getConfig, type Config } from './core/configuration';
+import { gateLoader, type Gate } from './core/gates';
+import { logException } from './core/helpers';
+import { Logger } from './core/logger';
+import { appConfig } from './.sparkbot.config';
+import {
+	type CommandSpark,
+	type InteractionSpark,
+	sparkLoader,
+} from './core/sparks';
 
-// Get the config
-const config = await loadConfig();
+/* Spark⚡️Bot is designed to run with Bun and will have errors if run in a
+   different environment. */
+if (!Bun) {
+	throw new Error('Must be run with Bun');
+}
 
-// Initialize a new Discord.js client
-const client = new Client({
+// Initialize Logger
+const logger = new Logger();
+
+// Get parsed config
+let config: Config;
+try {
+	config = await getConfig(appConfig);
+} catch (exception) {
+	throw logException(exception, logger);
+}
+
+// Initialize user-configured logger
+try {
+	await logger.loadPlugin(config.loggingLibraryPlugin);
+} catch (exception) {
+	throw logException(exception, logger);
+}
+
+// Initialize Discord.js client
+declare module 'discord.js' {
+	interface Client {
+		config: Config;
+		interactions: Collection<string, InteractionSpark | CommandSpark>;
+		gates: Collection<string, Gate>;
+		logger: Logger;
+		scheduledEvents: Collection<string, CronJob>;
+	}
+}
+
+const discordClient = new Client({
 	intents: config.discordIntents,
 	partials: config.enabledPartials,
 	presence: config.defaultPresence,
 });
-sparkContainer.client = client;
-client.config = config;
-client.sparks = new Collection();
-client.cooldowns = new Collection();
-client.commands = [];
-client.scheduledEvents = new Collection();
+discordClient.config = config;
+discordClient.logger = logger;
+logger.registerClientHandlers(discordClient);
+discordClient.scheduledEvents = new Collection();
 
-// Initialize logger
-client.logger = await initLogger(client.config.loggingLibraryPlugin);
-client.on(Events.Debug, (message) => {
-	client.logger.debug(message);
+// Load gates
+try {
+	discordClient.gates = await gateLoader();
+} catch (exception) {
+	throw logException(exception, logger);
+}
+
+// Load sparks
+discordClient.interactions = new Collection<
+	string,
+	InteractionSpark | CommandSpark
+>();
+try {
+	await sparkLoader(discordClient);
+} catch (exception) {
+	throw logException(exception, logger);
+}
+
+const commands: Array<SlashCommandBuilder | ContextMenuCommandBuilder> = [];
+discordClient.interactions.each((interaction) => {
+	if ('command' in interaction) {
+		commands.push(interaction.command);
+	}
 });
-client.on(Events.Warn, (message) => {
-	client.logger.warn(message);
-});
-client.on(Events.Error, (message) => {
-	client.logger.error(message);
-});
+if (commands.length > 0) {
+	const rest = new REST({ version: '10' }).setToken(config.discordAPIKey);
+	const route = Routes.applicationCommands(config.discordAppID);
 
-// Load Sparks
-await sparkLoader();
+	try {
+		await rest
+			.put(route, {
+				body: commands.map((command) => command.toJSON()),
+			})
+			.then((data) => {
+				if (data && typeof data === 'object' && 'length' in data)
+					logger.info(`🔵 Registered ${String(data.length)} command(s)`);
+			})
+			.catch((exception: unknown) => {
+				logException(exception, logger);
+			});
+	} catch (exception) {
+		logException(exception, logger);
+	}
+}
 
-// Register commands
-const rest = new REST({ version: '10' }).setToken(config.discordAPIKey);
-await rest
-	.put(Routes.applicationCommands(config.discordAppID), {
-		body: client.commands.map((command) => command.toJSON()),
-	})
-	.then((data) => {
-		if (data && typeof data === 'object' && 'length' in data)
-			client.logger.info(`🔵 Registered ${String(data.length)} command(s)`);
-	})
-	.catch((exception: unknown) => {
-		if (exception instanceof Error) {
-			client.logger.error(exception);
-		} else {
-			client.logger.error(String(exception));
-		}
-	});
-
-// Login
-await client.login(config.discordAPIKey);
+// Login to Discord
+try {
+	await discordClient.login(config.discordAPIKey);
+} catch (exception) {
+	throw logException(exception, logger);
+}

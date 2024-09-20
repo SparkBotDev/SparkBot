@@ -1,27 +1,26 @@
 import { CronJob } from 'cron';
 import { DateTime } from 'luxon';
 import type { Client } from 'discord.js';
-import { sparkContainer } from './container.ts';
 import { Spark } from './spark.ts';
 
 export abstract class ScheduledEventSpark extends Spark {
-	protected timezone?: string;
-	protected abstract id: string;
-	protected abstract schedule: string[];
+	abstract id: string;
+	abstract timezone: string;
+	abstract schedule: string[];
 
-	override onLoad(): void {
+	override register(): void {
 		for (const schedule of this.schedule) {
 			const job = CronJob.from({
 				cronTime: schedule,
+				timeZone: this.timezone,
 				onTick: () => {
-					this.execute(sparkContainer.client!);
+					this.gateCheck(this.client);
 				},
 				start: true,
-				timeZone: this.timezone ?? '',
 			});
 
-			sparkContainer.client?.scheduledEvents.set(this.id + '-' + schedule, job);
-			sparkContainer.client?.logger.info(
+			this.client.scheduledEvents.set(this.id + '-' + schedule, job);
+			this.client.logger.info(
 				`🕑 Scheduled event ${this.id} scheduled: ${job.nextDate().toLocaleString(DateTime.DATETIME_FULL)}`,
 			);
 		}
