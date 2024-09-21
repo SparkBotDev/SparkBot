@@ -35,14 +35,12 @@ export class Logger {
 		// Register logger to log unhandled exceptions
 		process.on('uncaughtException', (error) => {
 			this.logger.error(new Error('Uncaught Exception:', { cause: error }));
-			process.exit(1);
 		});
 
 		process.on('unhandledRejection', (error) => {
 			this.logger.error(
 				new Error('Unhandled promise rejection:', { cause: error }),
 			);
-			process.exit(1);
 		});
 	}
 

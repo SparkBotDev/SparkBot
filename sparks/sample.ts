@@ -20,7 +20,7 @@ pingCommand
 export class Ping extends CommandSpark {
 	id = pingCommand.name;
 	command = pingCommand;
-	gates = { test: false };
+	gates = {};
 
 	async execute(interaction: ChatInputCommandInteraction) {
 		await interaction.reply({

@@ -6,7 +6,17 @@ import type { Gate } from './gate.ts';
 
 const GateSchema = v.object({
 	id: v.string(),
-	check: v.function(),
+	check: v.pipe(
+		v.instance(Function),
+		v.transform((function_) => {
+			return (...args: unknown[]) => {
+				const parsedArgs = v.parse(v.array(v.unknown()), args);
+				const return_ = function_(parsedArgs); // eslint-disable-line @typescript-eslint/no-unsafe-assignment
+				const parsedReturn = v.parse(v.boolean(), return_); // eslint-disable-line @typescript-eslint/naming-convention
+				return parsedReturn;
+			};
+		}),
+	),
 });
 export async function gateLoader() {
 	const importPath = join(import.meta.dir, '../../gates/');
